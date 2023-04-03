@@ -1,0 +1,14 @@
+{
+  "name": "paginegialle_webscraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "file-saver": "^2.0.5",
+    "json2csv": "^6.0.0-alpha.2",
+    "puppeteer": "^19.7.2",
+    "puppeteer-cluster": "^0.23.0"
+  }
+}
