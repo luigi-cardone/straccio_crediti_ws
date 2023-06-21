@@ -4,5 +4,5 @@ export const region_index = {
 
 export const search_config ={
     location : "Lombardia",
-    items_per_page: 1
+    items_per_page: 10
 }

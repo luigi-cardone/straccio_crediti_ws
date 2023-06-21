@@ -29,7 +29,7 @@ export default class Search{
     }
     //auction_threshold, auction_end_threshold
     fabricateQuery(){
-        return `https://pvp.giustizia.it/pvp/it/risultati_ricerca.page?tipo_bene=immobili&categoria=&geo=geografica&nazione=ITA&regione=${region_index[this.config.location]}&localita=&indirizzo=&prezzo_da=&prezzo_a=&tribunale=&procedura=&anno=&idInserzione=&ricerca_libera=&disponibilita=&ordinamento=data_vendita_decre&ordine_localita=a_z&view=tab&elementiPerPagina=${this.config.items_per_page}&frame4_item=1`
+        return `https://pvp.giustizia.it/pvp/it/risultati_ricerca.page?tipo_bene=immobili&categoria=&geo=geografica&nazione=ITA&regione=${region_index[this.config.location]}&localita=&indirizzo=&prezzo_da=&prezzo_a=&tribunale=&procedura=&anno=&idInserzione=&ricerca_libera=&disponibilita=&ordinamento=data_pub_decre&ordine_localita=a_z&view=tab&elementiPerPagina=${this.config.items_per_page}&frame4_item=1`
     }
 
     async grabCurrentRunduplicates() {
@@ -69,7 +69,7 @@ export default class Search{
         await cluster.waitForSelector('#annunci > div > div:nth-child(2) > div > div.row')
         const auction_sell_detailsRows = await cluster.$$('#annunci > div > div:nth-child(2) > div > div.row')
         for(const auction_sell_detailsRowHandle of auction_sell_detailsRows){
-            if((await cluster.evaluate(el => el.children[0]?.className, auction_sell_detailsRowHandle) === 'col-xs-12 col-md-8 col-lg-6 margin-top-20')) return 0
+            if((await cluster.evaluate(el => el.children[0]?.className, auction_sell_detailsRowHandle) === 'col-xs-12 col-md-8 col-lg-6 margin-top-20')) continue
             const childKey = await cluster.evaluate(el => el.children[0]?.textContent, auction_sell_detailsRowHandle)
             const childValue = await cluster.evaluate(el => el.children[1]?.textContent, auction_sell_detailsRowHandle)
             auctionData[childKey?.replaceAll("\t", "").replaceAll("\n", "").trim()] = childValue?.replaceAll("\t", "").replaceAll("\n", "").trim()
@@ -133,7 +133,22 @@ export default class Search{
             auctionItems.push(item)
         }
         auctionData["Beni lotto"] = auctionItems
-        this.search_data.push(auctionData)
+        const auction_imgs = []
+        for(var i = 0; i < auctionItems.length; i++ ){
+            const auctionImgsdataRows = await cluster.$$(`#carousel-${i} > div.scroller > a`)
+            for(const auctionFileImgsRowHandle of auctionImgsdataRows){
+                var img = (await cluster.evaluate(el => el?.children[0]?.src, auctionFileImgsRowHandle))
+                auction_imgs.push(img)
+            }
+        }
+        auctionData["Immagini"] = auction_imgs
+        const date = auctionData["Termine presentazione offerta"].replaceAll("/", "-").split(" ")[0]
+        const auctionDate = new Date(date.split("-").reverse().join(","))
+        const minDate = new Date(new Date().getDate() + 40 * 24 * 60 * 60 * 1000)
+        if(auctionDate.getDate() > minDate.getDate()){
+            console.log("La data di terminazione è nel tempo limite")
+            this.search_data.push(auctionData)
+        }
         return 0
     }
     
